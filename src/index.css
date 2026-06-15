@@ -1,0 +1,1219 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  /* Default Colors: Dark Slate Theme */
+  --font-sans: 'Outfit', 'Sarabun', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Theme variables (Defaults to Dark Mode - Slate) */
+  --bg-app: #090d16;
+  --bg-sidebar: #0f1626;
+  --bg-card: #182235;
+  --bg-card-hover: #1e2a41;
+  --bg-input: #1f2d47;
+  --bg-active: #243555;
+  
+  --border-color: #25354e;
+  --border-focus: #3b82f6;
+  
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-inverse: #0f172a;
+  
+  --accent: #F59E0B; /* Amber/Gold default */
+  --accent-light: rgba(245, 158, 11, 0.15);
+  --accent-border: rgba(245, 158, 11, 0.4);
+  
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-success-bg: rgba(16, 185, 129, 0.15);
+  --color-warning: #f59e0b;
+  --color-warning-bg: rgba(245, 158, 11, 0.15);
+  --color-danger: #ef4444;
+  --color-danger-bg: rgba(239, 68, 68, 0.15);
+  --color-info: #3b82f6;
+  --color-info-bg: rgba(59, 130, 246, 0.15);
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 15px rgba(245, 158, 11, 0.2);
+
+  --sidebar-width: 260px;
+  --transition-speed: 0.2s;
+}
+
+/* Light Theme overrides */
+:root[data-theme="light"] {
+  --bg-app: #f8fafc;
+  --bg-sidebar: #ffffff;
+  --bg-card: #f1f5f9;
+  --bg-card-hover: #e2e8f0;
+  --bg-input: #ffffff;
+  --bg-active: #cbd5e1;
+  
+  --border-color: #cbd5e1;
+  --border-focus: #f59e0b;
+  
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  --shadow-glow: 0 0 12px rgba(245, 158, 11, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  line-height: 1.5;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+/* Custom Scrollbar for premium feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Layout Core */
+#root {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.app-container {
+  display: flex;
+  width: 100%;
+  position: relative;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 50;
+  transition: transform var(--transition-speed) ease;
+}
+
+.sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-logo {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 1px;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-logo-accent {
+  color: var(--accent);
+}
+
+.sidebar-menu {
+  flex: 1;
+  padding: 20px 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin: 16px 8px 8px 12px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  outline: none;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+
+.menu-item:hover {
+  background-color: var(--bg-card-hover);
+  color: var(--text-main);
+}
+
+.menu-item.active {
+  background-color: var(--bg-active);
+  color: var(--text-main);
+  border-left: 3px solid var(--accent);
+}
+
+/* Main Content Panel */
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: margin-left var(--transition-speed) ease;
+}
+
+/* Top Navigation Bar */
+.top-bar {
+  height: 70px;
+  background-color: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-main);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.greeting-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.time-badge {
+  font-size: 12px;
+  background: var(--bg-card);
+  padding: 4px 10px;
+  border-radius: 99px;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+/* Page Containers */
+.page-container {
+  padding: 32px;
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition-speed) ease;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--text-inverse);
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-secondary {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+.btn-secondary:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.btn-icon-only {
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-speed) ease;
+}
+.btn-icon-only:hover {
+  background-color: var(--bg-card-hover);
+}
+
+/* Modals & Dialogs */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-footer {
+  padding: 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Forms & Inputs */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.form-control {
+  font-family: var(--font-sans);
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: var(--text-main);
+  font-size: 14px;
+  transition: border-color var(--transition-speed) ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-success {
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.badge-danger {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.badge-info {
+  background-color: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.badge-secondary {
+  background-color: rgba(148, 163, 184, 0.12);
+  color: var(--text-muted);
+}
+
+/* Responsive Grid / Cards */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.matter-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.matter-card:hover {
+  transform: translateY(-2px);
+  background-color: var(--bg-card-hover);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-md);
+}
+
+.matter-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  width: 100%;
+  background-color: var(--accent);
+  opacity: 0.7;
+}
+
+.matter-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.matter-card-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.matter-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.matter-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .hamburger {
+    display: block;
+  }
+  
+  .page-container {
+    padding: 20px;
+  }
+}
+
+/* ============================================================
+   LAWGUILD — Premium UI Patch (Integrated)
+   ============================================================ */
+
+/* ── 1. Color Token Refinement ───────────────────────────── */
+:root {
+  /* Deep background layers — สร้าง elevation ที่ชัดขึ้น */
+  --bg-app:     #070c16;
+  --bg-sidebar: #0b1120;
+  --bg-card:    #0f1928;
+  --bg-card-hover: #141f32;
+  --bg-input:   #111d2e;
+  --bg-active:  rgba(245, 158, 11, 0.1);
+
+  /* Border — บางลง ดู premium กว่า */
+  --border-color:  rgba(255, 255, 255, 0.07);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-focus:  rgba(245, 158, 11, 0.5);
+
+  /* Text hierarchy — ลดหลั่นชัดขึ้น */
+  --text-main:   #f1f5f9;
+  --text-muted:  rgba(148, 163, 184, 0.65);
+  --text-faint:  rgba(148, 163, 184, 0.35);
+
+  /* Accent refinement */
+  --accent:        #f59e0b;
+  --accent-light:  rgba(245, 158, 11, 0.1);
+  --accent-border: rgba(245, 158, 11, 0.2);
+  --accent-glow:   rgba(245, 158, 11, 0.15);
+
+  /* Shadows — เพิ่ม depth */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Light theme ปรับตาม */
+:root[data-theme="light"] {
+  --bg-app:        #f4f6fa;
+  --bg-sidebar:    #ffffff;
+  --bg-card:       #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-input:      #f8fafc;
+  --bg-active:     rgba(245, 158, 11, 0.08);
+  --border-color:  rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.04);
+  --text-main:     #0f172a;
+  --text-muted:    rgba(71, 85, 105, 0.85);
+  --text-faint:    rgba(71, 85, 105, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 2. Sidebar — Full Rework ────────────────────────────── */
+.sidebar {
+  background-color: var(--bg-sidebar);
+  border-right: 0.5px solid var(--border-color);
+}
+
+/* Logo area — เพิ่ม icon + subtext */
+.sidebar-header {
+  padding: 16px 14px;
+  border-bottom: 0.5px solid var(--border-color);
+  gap: 10px;
+}
+
+.sidebar-logo {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  gap: 10px;
+}
+
+/* Icon badge หน้าโลโก้ */
+.sidebar-logo::before {
+  content: 'L';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0b1120;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-right: -2px;
+}
+
+/* Section titles */
+.menu-section-title {
+  font-size: 9.5px;
+  letter-spacing: 1.5px;
+  color: var(--text-faint);
+  margin: 14px 8px 6px 14px;
+}
+
+/* Menu items */
+.menu-item {
+  display: flex;
+  align-items: center;
+  width: calc(100% - 12px);
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  outline: none;
+  padding: 8px 12px;
+  margin: 1px 6px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+  gap: 9px;
+  transition: all 0.15s ease;
+}
+
+.menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  color: var(--text-main);
+}
+
+.menu-item.active {
+  background-color: var(--bg-active);
+  color: var(--text-main);
+  border-left: 2.5px solid var(--accent);
+  font-weight: 500;
+}
+
+/* Icon ใน active item เป็น amber */
+.menu-item.active svg,
+.menu-item.active i,
+.menu-item.active span:first-child {
+  color: var(--accent);
+}
+
+/* ── 3. Top Bar ──────────────────────────────────────────── */
+.top-bar {
+  height: 52px;
+  background-color: var(--bg-sidebar);
+  border-bottom: 0.5px solid var(--border-color);
+  padding: 0 24px;
+}
+
+.greeting-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(248, 250, 252, 0.85);
+}
+
+.time-badge {
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 3px 9px;
+  border-radius: 99px;
+  color: var(--text-faint);
+  border: 0.5px solid var(--border-color);
+}
+
+.btn-icon-only {
+  width: 30px;
+  height: 30px;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 0.5px solid var(--border-color);
+  color: var(--text-muted);
+}
+
+.btn-icon-only:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+}
+
+/* ── 4. Dashboard Hero ───────────────────────────────────── */
+.dashboard-hero {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+/* Subtle amber glow top-right */
+.dashboard-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.07) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* Top highlight line */
+.dashboard-hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.3), transparent);
+}
+
+/* Eyebrow label เหนือ heading */
+.dashboard-hero-title::before {
+  content: attr(data-eyebrow);
+  display: block;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: rgba(245, 158, 11, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 5px;
+}
+
+.dashboard-hero-title h1 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  margin-bottom: 3px;
+}
+
+.dashboard-hero-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Stats row */
+.dashboard-hero-stats {
+  gap: 0;
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 0.5px solid var(--border-subtle);
+}
+
+.hero-stat-item {
+  padding-right: 24px;
+}
+
+.hero-stat-item + .hero-stat-item {
+  padding-left: 24px;
+  border-left: 0.5px solid var(--border-subtle);
+}
+
+.hero-stat-val {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.hero-stat-lbl {
+  font-size: 9.5px;
+  letter-spacing: 0.8px;
+  color: var(--text-faint);
+  margin-top: 0;
+}
+
+/* ── 5. Cards — Matter Cards ─────────────────────────────── */
+.matter-card {
+  background-color: var(--bg-card);
+  border: 0.5px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  gap: 12px;
+  box-shadow: none;
+  transition: all 0.15s ease;
+}
+
+/* Remove old thick top bar */
+.matter-card::before {
+  display: none;
+}
+
+/* Subtle top highlight instead */
+.matter-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.2), transparent);
+  border-radius: 12px 12px 0 0;
+}
+
+.matter-card:hover {
+  background-color: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.11);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.matter-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.2px;
+}
+
+.matter-card-details {
+  font-size: 12px;
+  color: var(--text-muted);
+  gap: 4px;
+}
+
+.matter-card-footer {
+  border-top: 0.5px solid var(--border-subtle);
+  margin-top: 6px;
+  padding-top: 10px;
+}
+
+/* ── 6. Workspace Pane ───────────────────────────────────── */
+.workspace-pane {
+  background-color: var(--bg-card);
+  border: 0.5px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.workspace-pane-header {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-bottom: 0.5px solid var(--border-color);
+  padding: 13px 18px;
+}
+
+.workspace-pane-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* ── 7. Badges ───────────────────────────────────────────── */
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-weight: 600;
+  border: 0.5px solid transparent;
+}
+
+.badge-success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: rgba(16, 185, 129, 0.9);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.badge-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: rgba(245, 158, 11, 0.9);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.badge-danger {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: rgba(239, 68, 68, 0.9);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.badge-info {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: rgba(59, 130, 246, 0.9);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.badge-secondary {
+  background-color: rgba(148, 163, 184, 0.08);
+  color: var(--text-muted);
+  border-color: rgba(148, 163, 184, 0.15);
+}
+
+/* ── 8. Buttons ──────────────────────────────────────────── */
+.btn {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 7px;
+  gap: 7px;
+  transition: all 0.15s ease;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: #0b1120;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+}
+
+.btn-secondary {
+  background-color: rgba(255, 255, 255, 0.04);
+  color: var(--text-main);
+  border: 0.5px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ── 9. Forms & Inputs ───────────────────────────────────── */
+.form-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.form-control {
+  background-color: var(--bg-input);
+  border: 0.5px solid var(--border-color);
+  border-radius: 7px;
+  font-size: 13px;
+  padding: 9px 12px;
+  color: var(--text-main);
+  transition: border-color 0.15s ease;
+}
+
+.form-control:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08);
+}
+
+.form-control::placeholder {
+  color: var(--text-faint);
+}
+
+/* ── 10. Calendar ────────────────────────────────────────── */
+.calendar-container {
+  background-color: var(--bg-card);
+  border: 0.5px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.calendar-cell {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: 7px;
+  min-height: 90px;
+}
+
+.calendar-cell:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: var(--border-color);
+}
+
+.calendar-cell-date.today {
+  color: var(--accent);
+  border-bottom: 1.5px solid var(--accent);
+}
+
+/* ── 11. Finance Table ───────────────────────────────────── */
+.finance-table-container {
+  background-color: var(--bg-card);
+  border: 0.5px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.finance-table th {
+  background-color: rgba(0, 0, 0, 0.15);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+  padding: 12px 18px;
+  border-bottom: 0.5px solid var(--border-color);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.finance-table td {
+  padding: 12px 18px;
+  font-size: 13px;
+  border-bottom: 0.5px solid var(--border-subtle);
+}
+
+.finance-table tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.finance-stat-card {
+  background-color: var(--bg-card);
+  border: 0.5px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.finance-stat-card-title {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--text-faint);
+}
+
+.finance-stat-card-value {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* ── 12. Modals ──────────────────────────────────────────── */
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+}
+
+.modal-content {
+  background-color: var(--bg-card);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.modal-header {
+  padding: 18px 20px;
+  border-bottom: 0.5px solid var(--border-color);
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 0.5px solid var(--border-color);
+}
+
+/* ── 13. File Cards ──────────────────────────────────────── */
+.file-card {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 0.5px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+  transition: all 0.15s ease;
+}
+
+.file-card:hover,
+.file-card.draggable:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.file-card.draggable:active {
+  border-color: var(--accent);
+  background-color: var(--accent-light);
+}
+
+.file-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.file-size {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* ── 14. Dropzone ────────────────────────────────────────── */
+.dropzone {
+  border: 1.5px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.02);
+  transition: all 0.15s ease;
+}
+
+.dropzone:hover,
+.dropzone.active {
+  border-color: rgba(245, 158, 11, 0.35);
+  background-color: rgba(245, 158, 11, 0.04);
+  color: var(--text-main);
+}
+
+/* ── 15. Diary Notes ─────────────────────────────────────── */
+.diary-note-block {
+  background-color: rgba(255, 255, 255, 0.025);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.diary-note-header {
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.05);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.diary-note-content {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: rgba(241, 245, 249, 0.8);
+}
+
+/* ── 16. Portal Cards ────────────────────────────────────── */
+.portal-card {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 0.5px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 14px;
+  transition: all 0.15s ease;
+}
+
+.portal-card:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent-border);
+  transform: translateY(-1px);
+}
+
+.portal-name {
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+/* ── 17. Scrollbar refinement ────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.3);
+}
+
+/* ── 18. Page container spacing ─────────────────────────── */
+.page-container {
+  padding: 24px 28px;
+}
+
+@media (max-width: 1024px) {
+  .page-container {
+    padding: 16px 18px;
+  }
+}
+
+/* ── 19. Animations — tighter ────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* ── 20. Light mode border fix ───────────────────────────── */
+:root[data-theme="light"] .matter-card::after,
+:root[data-theme="light"] .dashboard-hero::after {
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.2), transparent);
+}
+
+:root[data-theme="light"] .sidebar {
+  border-right: 0.5px solid rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme="light"] .top-bar {
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.07);
+}
+
+:root[data-theme="light"] .finance-table th {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+:root[data-theme="light"] .workspace-pane-header {
+  background-color: rgba(0, 0, 0, 0.03);
+}
