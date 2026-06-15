@@ -30,7 +30,7 @@ export class AuthService {
       auth: {
         clientId: isMock ? 'MOCK-CLIENT-ID-12345' : clientId,
         authority: 'https://login.microsoftonline.com/common',
-        redirectUri: window.location.origin,
+        redirectUri: window.location.origin + window.location.pathname,
       },
       cache: {
         cacheLocation: 'localStorage'
