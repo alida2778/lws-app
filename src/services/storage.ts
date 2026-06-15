@@ -24,7 +24,7 @@ const DEFAULT_SETTINGS: LWSSettings = {
   googleCalendarConnected: false,
   onedriveRootFolder: '',
   googleApiKey: '',
-  microsoftClientId: ''
+  microsoftClientId: '43dadaf8-0424-4449-80c3-c8d3e1cadcaa'
 };
 
 // Initial matters imported from initialMatters.ts (migrated from SQLite DB and folder scanner)
@@ -51,6 +51,9 @@ export class StorageService {
     }
     try {
       const settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+      if (!settings.microsoftClientId) {
+        settings.microsoftClientId = DEFAULT_SETTINGS.microsoftClientId;
+      }
       if (!isLocalhost) settings.isMockMode = false;
       return settings;
     } catch {
