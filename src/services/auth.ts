@@ -42,6 +42,27 @@ export class AuthService {
     return this.pca;
   }
 
+  // Helper to clear stuck MSAL interaction status in cache
+  private static clearInteractionStatus(): void {
+    const storages = [localStorage, sessionStorage];
+    for (const storage of storages) {
+      try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key && key.includes('interaction.status')) {
+            keysToRemove.push(key);
+          }
+        }
+        for (const key of keysToRemove) {
+          storage.removeItem(key);
+        }
+      } catch (e) {
+        console.warn('Failed to clear storage key:', e);
+      }
+    }
+  }
+
   // Sign In using MSAL (Popup redirects/authenticates)
   static async login(clientId: string): Promise<{ username: string; token: string } | null> {
     const isMock = this.isMockEnabled(clientId);
@@ -55,6 +76,9 @@ export class AuthService {
       };
     }
 
+    // Proactively clear any stuck interaction status from previous failed/blocked attempts
+    this.clearInteractionStatus();
+
     // If already pre-initialized, execute loginPopup synchronously in the click handler's call stack
     if (this.pca) {
       try {
@@ -67,8 +91,26 @@ export class AuthService {
           username: response.account.username,
           token: response.accessToken
         };
-      } catch (error) {
+      } catch (error: any) {
         console.error('MSAL Login Failed (Pre-initialized):', error);
+        if (error?.message?.includes('interaction_in_progress') || error?.errorCode === 'interaction_in_progress') {
+          console.warn('MSAL: interaction_in_progress detected. Clearing status and retrying...');
+          this.clearInteractionStatus();
+          try {
+            const loginRequest = {
+              scopes: ['user.read', 'files.readwrite']
+            };
+            const response = await this.pca.loginPopup(loginRequest);
+            this.currentToken = response.accessToken;
+            return {
+              username: response.account.username,
+              token: response.accessToken
+            };
+          } catch (retryError) {
+            console.error('MSAL Login Failed on retry:', retryError);
+            throw retryError;
+          }
+        }
         throw error;
       }
     }
@@ -85,8 +127,26 @@ export class AuthService {
         username: response.account.username,
         token: response.accessToken
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('MSAL Login Failed:', error);
+      if (error?.message?.includes('interaction_in_progress') || error?.errorCode === 'interaction_in_progress') {
+        console.warn('MSAL: interaction_in_progress detected. Clearing status and retrying...');
+        this.clearInteractionStatus();
+        try {
+          const loginRequest = {
+            scopes: ['user.read', 'files.readwrite']
+          };
+          const response = await pca.loginPopup(loginRequest);
+          this.currentToken = response.accessToken;
+          return {
+            username: response.account.username,
+            token: response.accessToken
+          };
+        } catch (retryError) {
+          console.error('MSAL Login Failed on retry:', retryError);
+          throw retryError;
+        }
+      }
       throw error;
     }
   }
