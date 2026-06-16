@@ -44,7 +44,6 @@ export class AuthService {
 
   // Sign In using MSAL (Popup redirects/authenticates)
   static async login(clientId: string): Promise<{ username: string; token: string } | null> {
-    const pca = await this.init(clientId);
     const isMock = this.isMockEnabled(clientId);
 
     if (isMock) {
@@ -56,6 +55,26 @@ export class AuthService {
       };
     }
 
+    // If already pre-initialized, execute loginPopup synchronously in the click handler's call stack
+    if (this.pca) {
+      try {
+        const loginRequest = {
+          scopes: ['user.read', 'files.readwrite']
+        };
+        const response = await this.pca.loginPopup(loginRequest);
+        this.currentToken = response.accessToken;
+        return {
+          username: response.account.username,
+          token: response.accessToken
+        };
+      } catch (error) {
+        console.error('MSAL Login Failed (Pre-initialized):', error);
+        throw error;
+      }
+    }
+
+    // Fallback if not pre-initialized yet
+    const pca = await this.init(clientId);
     try {
       const loginRequest = {
         scopes: ['user.read', 'files.readwrite']

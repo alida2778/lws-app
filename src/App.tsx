@@ -192,6 +192,15 @@ function App() {
     if (msg) setLoginError(msg);
   };
 
+  // Pre-initialize MSAL client to prevent browser popup blocking
+  useEffect(() => {
+    if (settings.microsoftClientId) {
+      AuthService.init(settings.microsoftClientId).catch(err => {
+        console.warn('MSAL Pre-initialization failed:', err);
+      });
+    }
+  }, [settings.microsoftClientId]);
+
   // Silent Token Refresh & Whitelist Enforcement
   useEffect(() => {
     const checkAuthAndRefresh = async () => {
