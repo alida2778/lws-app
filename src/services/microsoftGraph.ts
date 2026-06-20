@@ -1,4 +1,35 @@
 import type { Transaction, ClientProfile } from '../types';
+import { AuthService } from './auth';
+
+/**
+ * Wraps a Graph API fetch call with automatic token retry on 401 Unauthorized.
+ * If the first call gets a 401, it invalidates the cached token and retries once.
+ */
+async function graphFetch(
+  url: string,
+  options: RequestInit,
+  clientId: string
+): Promise<Response> {
+  let response = await fetch(url, options);
+  
+  if (response.status === 401) {
+    console.warn('[Graph API] 401 Unauthorized — invalidating cached token and retrying...');
+    AuthService.invalidateToken();
+    const freshToken = await AuthService.getAccessToken(clientId);
+    if (freshToken) {
+      const newOptions = {
+        ...options,
+        headers: {
+          ...(options.headers as Record<string, string>),
+          Authorization: `Bearer ${freshToken}`
+        }
+      };
+      response = await fetch(url, newOptions);
+    }
+  }
+  
+  return response;
+}
 
 export class MicrosoftGraphService {
   /**
@@ -6,6 +37,7 @@ export class MicrosoftGraphService {
    * If it returns 403 Forbidden, hasFinanceAccess will be set to false.
    */
   static async checkFinanceAccess(clientId: string, token: string, workspacePath: string): Promise<boolean> {
+
     const isMock = !clientId || clientId.startsWith('AIza') || clientId.toLowerCase().includes('mock');
     if (isMock) {
       return true; // Mock mode defaults to full access

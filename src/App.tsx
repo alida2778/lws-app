@@ -203,36 +203,53 @@ function App() {
 
   // Silent Token Refresh & Whitelist Enforcement
   useEffect(() => {
+    let cancelled = false;
+
     const checkAuthAndRefresh = async () => {
       const savedAccount = localStorage.getItem('lws_microsoft_account');
       if (savedAccount && savedAccount !== 'Local Storage Offline') {
         // 1. Whitelist Check
         const isAllowed = WHITELIST.map(e => e.toLowerCase()).includes(savedAccount.toLowerCase());
         if (!isAllowed) {
-          handleForceSignOut('❌ อีเมลนี้ไม่มีสิทธิ์เข้าใช้งานระบบ LWS');
+          if (!cancelled) handleForceSignOut('❌ อีเมลนี้ไม่มีสิทธิ์เข้าใช้งานระบบ LWS');
           return;
         }
 
-        // 2. Silent Token Refresh
+        // 2. Wait for MSAL to fully initialize before attempting silent refresh
+        //    This prevents false "token null" sign-outs right after page load.
+        if (settings.microsoftClientId) {
+          try {
+            await AuthService.init(settings.microsoftClientId);
+          } catch (e) {
+            console.warn('[Auth] MSAL pre-init failed during token check:', e);
+          }
+        }
+
+        // 3. Silent Token Refresh
         try {
           const freshToken = await AuthService.getAccessToken(settings.microsoftClientId);
+          if (cancelled) return;
           if (freshToken) {
             localStorage.setItem('lws_microsoft_token', freshToken);
             setMicrosoftToken(freshToken);
             setLoginError(null);
           } else {
-            console.warn('Silent token retrieval returned null, forcing re-authentication.');
-            handleForceSignOut('สิทธิ์การเข้าถึง Microsoft หมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง');
+            // Token null can happen on cold start — don't force sign out immediately.
+            // Only force sign out if there is no MSAL account stored at all.
+            console.warn('[Auth] Silent token retrieval returned null. User may need to re-login.');
+            // Show soft warning instead of hard sign out
+            setLoginError('⚠️ Token หมดอายุ กรุณากด "เข้าสู่ระบบ" อีกครั้ง หรือ Refresh หน้าเว็บ');
           }
         } catch (error) {
-          console.error('Silent token refresh failed:', error);
-          handleForceSignOut('เซสชันของท่านหมดอายุหรือเชื่อมต่อล้มเหลว กรุณาเข้าสู่ระบบใหม่');
+          if (cancelled) return;
+          console.error('[Auth] Silent token refresh failed:', error);
+          setLoginError('⚠️ เชื่อมต่อ Microsoft ล้มเหลว กรุณาเข้าสู่ระบบใหม่');
         }
       } else if (savedAccount === 'Local Storage Offline') {
         const isLocal = window.location.hostname === 'localhost' || 
                         window.location.hostname === '127.0.0.1' || 
                         window.location.hostname === '[::1]';
-        if (!isLocal) {
+        if (!isLocal && !cancelled) {
           handleForceSignOut();
         }
       }
@@ -241,6 +258,8 @@ function App() {
     if (isAuthenticated) {
       checkAuthAndRefresh();
     }
+
+    return () => { cancelled = true; };
   }, [isAuthenticated, settings.microsoftClientId]);
 
   // Load initial data

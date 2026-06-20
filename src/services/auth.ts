@@ -126,7 +126,15 @@ export class AuthService {
 
   // Acquire active Microsoft token
   static async getAccessToken(clientId: string): Promise<string | null> {
+    // First try in-memory token (fastest path)
     if (this.currentToken) return this.currentToken;
+
+    // Restore from localStorage on page refresh
+    const cachedToken = localStorage.getItem('lws_microsoft_token');
+    if (cachedToken) {
+      this.currentToken = cachedToken;
+    }
+
     const isMock = this.isMockEnabled(clientId);
     if (isMock) return 'mock-microsoft-access-token-99999';
 
@@ -135,16 +143,27 @@ export class AuthService {
     if (accounts.length === 0) return null;
 
     try {
+      // Try silent refresh first (uses refresh token internally)
       const response = await pca.acquireTokenSilent({
         scopes: ['user.read', 'files.readwrite'],
-        account: accounts[0]
+        account: accounts[0],
+        forceRefresh: false
       });
       this.currentToken = response.accessToken;
+      localStorage.setItem('lws_microsoft_token', response.accessToken);
       return response.accessToken;
-    } catch (error) {
-      console.warn('Silent token retrieval failed:', error);
+    } catch (silentError: any) {
+      console.warn('[Auth] Silent token refresh failed:', silentError?.errorCode || silentError);
+      // Silent failed - clear stale token so caller knows to re-login
+      this.currentToken = null;
       return null;
     }
+  }
+
+  // Invalidate in-memory token (call this when API returns 401)
+  static invalidateToken(): void {
+    this.currentToken = null;
+    // Do NOT remove localStorage token here - let silent refresh try first
   }
 
   // Scan root folders in OneDrive (Graph API children scan)
