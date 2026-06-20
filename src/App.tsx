@@ -91,6 +91,7 @@ function App() {
   });
   const [isWorkspaceSelectorOpen, setIsWorkspaceSelectorOpen] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
 
   // Navigation & Views
   const [activeView, setActiveView] = useState<'dashboard' | 'matters' | 'snoozed' | 'finance' | 'calendar' | 'backlog' | 'clients'>('dashboard');
@@ -325,10 +326,13 @@ function App() {
 
   // Microsoft authentication handlers
   const handleMicrosoftLogin = async () => {
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
     try {
       if (!settings.microsoftClientId) {
         alert('กรุณากรอก Microsoft Client ID ในแผงตั้งค่า (⚙️) ก่อนเข้าสู่ระบบ');
         setIsConnSetupOpen(true);
+        setIsLoggingIn(false);
         return;
       }
       
@@ -344,6 +348,7 @@ function App() {
           } catch (err) {
             console.warn('Logout after failed whitelist check failed:', err);
           }
+          setIsLoggingIn(false);
           return;
         }
 
@@ -359,6 +364,8 @@ function App() {
       }
     } catch (e: any) {
       alert('เข้าสู่ระบบล้มเหลว: ' + (e?.message || e));
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -625,6 +632,7 @@ function App() {
               type="button" 
               className="btn-microsoft" 
               onClick={handleMicrosoftLogin} 
+              disabled={isLoggingIn}
             >
               <svg width="20" height="20" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M0 0H11V11H0V0Z" fill="#F25022"/>
@@ -632,7 +640,7 @@ function App() {
                 <path d="M0 12H11V23H0V12Z" fill="#00A1F1"/>
                 <path d="M12 12H23V23H12V12Z" fill="#FFB900"/>
               </svg>
-              Sign in with Microsoft OneDrive
+              {isLoggingIn ? 'Connecting to Microsoft...' : 'Sign in with Microsoft OneDrive'}
             </button>
             {isLocal && (
               <button 
@@ -1762,25 +1770,17 @@ function App() {
       {/* PDF View Modal Overlay */}
       {pdfPreviewFile && (
         <div className="modal-overlay" style={{ display: 'flex' }} onClick={() => setPdfPreviewFile(null)}>
-          <div className="modal-content" style={{ maxWidth: '800px', height: '80vh' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" style={{ maxWidth: '1000px', width: '90%', height: '90vh' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">📕 พรีวิวหลักฐาน - {pdfPreviewFile.name}</h3>
               <button className="btn-icon-only" onClick={() => setPdfPreviewFile(null)}>×</button>
             </div>
-            <div className="modal-body" style={{ flex: 1, padding: 0, overflow: 'hidden', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ color: 'white', textAlign: 'center', padding: '24px' }}>
-                <FileText size={64} style={{ color: 'var(--accent)', margin: '0 auto 16px' }} />
-                <h4>[Simulated PDF Viewer Component]</h4>
-                <p style={{ opacity: 0.7, fontSize: '13px', marginTop: '8px' }}>
-                  ระบบหน้ากาก LWS โหลดพรีวิวหลักฐานคัดสรรขนาด <strong>{(pdfPreviewFile.size / 1024).toFixed(1)} KB</strong> สำเร็จ
-                </p>
-                <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #334155', textAlign: 'left', marginTop: '24px', maxWidth: '500px', fontFamily: 'monospace', fontSize: '12px' }}>
-                  <div>File Category: {pdfPreviewFile.category}</div>
-                  <div>Logical Tab tag: {pdfPreviewFile.evidenceStatus || 'none'}</div>
-                  <div>Virtual OneDrive Path: {pdfPreviewFile.path}</div>
-                  <div>Last Modified: {new Date(pdfPreviewFile.lastModified).toLocaleString()}</div>
-                </div>
-              </div>
+            <div className="modal-body" style={{ flex: 1, padding: 0, overflow: 'hidden', background: '#1e293b', display: 'flex', flexDirection: 'column' }}>
+              <iframe 
+                src={`/api/view-file?workspace=${encodeURIComponent(activeWorkspace || '')}&path=${encodeURIComponent(pdfPreviewFile.path)}`}
+                style={{ width: '100%', height: '100%', border: 'none' }}
+                title={pdfPreviewFile.name}
+              />
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setPdfPreviewFile(null)}>ปิดหน้าต่าง</button>

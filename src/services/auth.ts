@@ -12,6 +12,7 @@ export interface OneDriveWorkspace {
 
 export class AuthService {
   private static pca: PublicClientApplication | null = null;
+  private static initPromise: Promise<PublicClientApplication> | null = null;
   private static currentToken: string | null = null;
 
   private static isMockEnabled(clientId: string): boolean {
@@ -22,10 +23,11 @@ export class AuthService {
     return !clientId || clientId.startsWith('AIza') || clientId.toLowerCase().includes('mock');
   }
 
-  // Initialize MSAL client application
-  static async init(clientId: string): Promise<PublicClientApplication> {
+  // Initialize MSAL client application using Singleton Pattern
+  static init(clientId: string): Promise<PublicClientApplication> {
+    if (this.initPromise) return this.initPromise;
+
     const isMock = this.isMockEnabled(clientId);
-    
     const msalConfig: Configuration = {
       auth: {
         clientId: isMock ? 'MOCK-CLIENT-ID-12345' : clientId,
@@ -37,9 +39,14 @@ export class AuthService {
       }
     };
 
-    this.pca = new PublicClientApplication(msalConfig);
-    await this.pca.initialize();
-    return this.pca;
+    this.initPromise = (async () => {
+      const pca = new PublicClientApplication(msalConfig);
+      await pca.initialize();
+      this.pca = pca;
+      return pca;
+    })();
+
+    return this.initPromise;
   }
 
   // Helper to clear stuck MSAL interaction status in cache
@@ -76,47 +83,12 @@ export class AuthService {
       };
     }
 
+    // Await complete initialization of MSAL (Singleton promise guarantees only one PCA is initialized once)
+    const pca = await this.init(clientId);
+
     // Proactively clear any stuck interaction status from previous failed/blocked attempts
     this.clearInteractionStatus();
 
-    // If already pre-initialized, execute loginPopup synchronously in the click handler's call stack
-    if (this.pca) {
-      try {
-        const loginRequest = {
-          scopes: ['user.read', 'files.readwrite']
-        };
-        const response = await this.pca.loginPopup(loginRequest);
-        this.currentToken = response.accessToken;
-        return {
-          username: response.account.username,
-          token: response.accessToken
-        };
-      } catch (error: any) {
-        console.error('MSAL Login Failed (Pre-initialized):', error);
-        if (error?.message?.includes('interaction_in_progress') || error?.errorCode === 'interaction_in_progress') {
-          console.warn('MSAL: interaction_in_progress detected. Clearing status and retrying...');
-          this.clearInteractionStatus();
-          try {
-            const loginRequest = {
-              scopes: ['user.read', 'files.readwrite']
-            };
-            const response = await this.pca.loginPopup(loginRequest);
-            this.currentToken = response.accessToken;
-            return {
-              username: response.account.username,
-              token: response.accessToken
-            };
-          } catch (retryError) {
-            console.error('MSAL Login Failed on retry:', retryError);
-            throw retryError;
-          }
-        }
-        throw error;
-      }
-    }
-
-    // Fallback if not pre-initialized yet
-    const pca = await this.init(clientId);
     try {
       const loginRequest = {
         scopes: ['user.read', 'files.readwrite']
@@ -129,24 +101,9 @@ export class AuthService {
       };
     } catch (error: any) {
       console.error('MSAL Login Failed:', error);
-      if (error?.message?.includes('interaction_in_progress') || error?.errorCode === 'interaction_in_progress') {
-        console.warn('MSAL: interaction_in_progress detected. Clearing status and retrying...');
-        this.clearInteractionStatus();
-        try {
-          const loginRequest = {
-            scopes: ['user.read', 'files.readwrite']
-          };
-          const response = await pca.loginPopup(loginRequest);
-          this.currentToken = response.accessToken;
-          return {
-            username: response.account.username,
-            token: response.accessToken
-          };
-        } catch (retryError) {
-          console.error('MSAL Login Failed on retry:', retryError);
-          throw retryError;
-        }
-      }
+      // Clean up the status on error so MSAL isn't stuck on future attempts,
+      // but do NOT retry immediately in the same stack as it would spawn overlapping popups.
+      this.clearInteractionStatus();
       throw error;
     }
   }
@@ -173,19 +130,19 @@ export class AuthService {
     const isMock = this.isMockEnabled(clientId);
     if (isMock) return 'mock-microsoft-access-token-99999';
 
-    if (!this.pca) await this.init(clientId);
-    const accounts = this.pca!.getAllAccounts();
+    const pca = await this.init(clientId);
+    const accounts = pca.getAllAccounts();
     if (accounts.length === 0) return null;
 
     try {
-      const response = await this.pca!.acquireTokenSilent({
+      const response = await pca.acquireTokenSilent({
         scopes: ['user.read', 'files.readwrite'],
         account: accounts[0]
       });
       this.currentToken = response.accessToken;
       return response.accessToken;
     } catch (error) {
-      console.warn('Silent token retrieval failed, requesting login popup:', error);
+      console.warn('Silent token retrieval failed:', error);
       return null;
     }
   }

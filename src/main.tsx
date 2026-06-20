@@ -4,13 +4,17 @@ import './index.css'
 import './lawguild-premium.css'
 import App from './App.tsx'
 
-// Check if the current window is an MSAL popup window.
+// Check if the current window is an MSAL popup window or redirect callback.
 // If it is, we bypass mounting the React app. This prevents a second React app 
 // and MSAL instance from initializing inside the popup, resolving "block_nested_popups".
-const isMsalPopup = typeof window !== 'undefined' && 
-  window.opener && 
-  window.name && 
-  (window.name.includes('msal') || window.name.includes('ms-id'));
+const isMsalPopup = typeof window !== 'undefined' && (
+  (window.opener && window.name && (window.name.includes('msal') || window.name.includes('ms-id'))) ||
+  window.location.hash.includes('code=') ||
+  window.location.hash.includes('id_token=') ||
+  window.location.hash.includes('state=') ||
+  window.location.hash.includes('error=') ||
+  window.location.search.includes('code=')
+);
 
 if (isMsalPopup) {
   console.log('MSAL Popup window detected. Bypassing React app mount to prevent nested initialization.');

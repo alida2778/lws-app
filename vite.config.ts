@@ -45,6 +45,37 @@ export default defineConfig({
       name: 'lws-local-api',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
+          if (req.url && req.url.startsWith('/api/view-file')) {
+            try {
+              const urlObj = new URL(req.url, 'http://localhost');
+              const workspaceParam = urlObj.searchParams.get('workspace');
+              const pathParam = urlObj.searchParams.get('path');
+              if (workspaceParam && pathParam) {
+                const absolutePath = path.resolve(workspaceParam, pathParam);
+                if (fs.existsSync(absolutePath)) {
+                  const ext = path.extname(absolutePath).toLowerCase();
+                  let contentType = 'application/octet-stream';
+                  if (ext === '.pdf') contentType = 'application/pdf';
+                  else if (ext === '.png') contentType = 'image/png';
+                  else if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
+                  
+                  res.writeHead(200, {
+                    'Content-Type': contentType,
+                    'Content-Disposition': 'inline',
+                    'Access-Control-Allow-Origin': '*'
+                  });
+                  fs.createReadStream(absolutePath).pipe(res);
+                  return;
+                }
+              }
+            } catch (err) {
+              console.error('Error serving file:', err);
+            }
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('File not found');
+            return;
+          }
+
           if (req.url === '/api/scan' && req.method === 'GET') {
             try {
               runScanner();
