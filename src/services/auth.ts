@@ -70,7 +70,7 @@ export class AuthService {
     }
   }
 
-  // Sign In using MSAL (Popup redirects/authenticates)
+  // Sign In using MSAL — uses Redirect mode (not Popup) to avoid block_nested_popups on GitHub Pages
   static async login(clientId: string): Promise<{ username: string; token: string } | null> {
     const isMock = this.isMockEnabled(clientId);
 
@@ -83,28 +83,45 @@ export class AuthService {
       };
     }
 
-    // Await complete initialization of MSAL (Singleton promise guarantees only one PCA is initialized once)
+    // Await complete initialization of MSAL
     const pca = await this.init(clientId);
 
-    // Proactively clear any stuck interaction status from previous failed/blocked attempts
+    // Proactively clear any stuck interaction status
     this.clearInteractionStatus();
 
+    // loginRedirect navigates the current window to Microsoft login.
+    // The result is handled separately by handleLoginRedirect() on the next load.
+    // This completely avoids block_nested_popups since no popup window is opened.
+    await pca.loginRedirect({
+      scopes: ['user.read', 'files.readwrite']
+    });
+
+    // This line is never reached — loginRedirect navigates away.
+    return null;
+  }
+
+  // Call this on app startup to process the result of a loginRedirect.
+  // Returns the user info if we just returned from a successful Microsoft login redirect.
+  static async handleLoginRedirect(clientId: string): Promise<{ username: string; token: string } | null> {
+    const isMock = this.isMockEnabled(clientId);
+    if (isMock) return null;
+    if (!clientId) return null;
+
     try {
-      const loginRequest = {
-        scopes: ['user.read', 'files.readwrite']
-      };
-      const response = await pca.loginPopup(loginRequest);
-      this.currentToken = response.accessToken;
-      return {
-        username: response.account.username,
-        token: response.accessToken
-      };
-    } catch (error: any) {
-      console.error('MSAL Login Failed:', error);
-      // Clean up the status on error so MSAL isn't stuck on future attempts,
-      // but do NOT retry immediately in the same stack as it would spawn overlapping popups.
-      this.clearInteractionStatus();
-      throw error;
+      const pca = await this.init(clientId);
+      const result = await pca.handleRedirectPromise();
+      if (result && result.accessToken) {
+        this.currentToken = result.accessToken;
+        localStorage.setItem('lws_microsoft_token', result.accessToken);
+        return {
+          username: result.account.username,
+          token: result.accessToken
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('[Auth] handleLoginRedirect failed:', error);
+      return null;
     }
   }
 

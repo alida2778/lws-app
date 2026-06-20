@@ -192,13 +192,43 @@ function App() {
     if (msg) setLoginError(msg);
   };
 
-  // Pre-initialize MSAL client to prevent browser popup blocking
+  // On startup: initialize MSAL and check if we're returning from a loginRedirect.
+  // loginRedirect navigates the user to Microsoft login and back — handleLoginRedirect()
+  // processes the auth code that Microsoft puts in the URL on return.
   useEffect(() => {
-    if (settings.microsoftClientId) {
-      AuthService.init(settings.microsoftClientId).catch(err => {
-        console.warn('MSAL Pre-initialization failed:', err);
-      });
-    }
+    if (!settings.microsoftClientId) return;
+
+    const processRedirect = async () => {
+      try {
+        const result = await AuthService.handleLoginRedirect(settings.microsoftClientId);
+        if (!result) return; // Not returning from a redirect, normal load
+
+        // We just returned from a successful Microsoft login redirect
+        const isAllowed = WHITELIST.map(e => e.toLowerCase()).includes(result.username.toLowerCase());
+        if (!isAllowed) {
+          alert('❌ คุณไม่มีสิทธิ์เข้าใช้งานระบบ LWS!');
+          setLoginError(`อีเมล ${result.username} ไม่มีสิทธิ์เข้าใช้งานระบบ LWS`);
+          try { await AuthService.logout(); } catch (_) {}
+          return;
+        }
+
+        localStorage.setItem('lws_microsoft_account', result.username);
+        localStorage.setItem('lws_microsoft_token', result.token);
+        setMicrosoftToken(result.token);
+        setLoginError(null);
+
+        // Load workspaces and show selector
+        const fetched = await AuthService.fetchOneDriveWorkspaces(settings.microsoftClientId, result.token);
+        setWorkspaces(fetched);
+        setIsWorkspaceSelectorOpen(true);
+      } catch (err: any) {
+        console.error('[Auth] processRedirect error:', err);
+        setLoginError('เข้าสู่ระบบล้มเหลว: ' + (err?.message || String(err)));
+      }
+    };
+
+    processRedirect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.microsoftClientId]);
 
   // Silent Token Refresh & Whitelist Enforcement
@@ -342,7 +372,7 @@ function App() {
   }, [clients, editClientQuery]);
 
 
-  // Microsoft authentication handlers
+  // Microsoft authentication handler — uses Redirect mode
   const handleMicrosoftLogin = async () => {
     if (isLoggingIn) return;
     setIsLoggingIn(true);
@@ -353,36 +383,14 @@ function App() {
         setIsLoggingIn(false);
         return;
       }
-      
-      const result = await AuthService.login(settings.microsoftClientId);
-      if (result) {
-        // Whitelist Match Guard (Case-Insensitive)
-        const isAllowed = WHITELIST.map(e => e.toLowerCase()).includes(result.username.toLowerCase());
-        if (!isAllowed) {
-          alert('❌ คุณไม่มีสิทธิ์เข้าใช้งานระบบ LWS!');
-          setLoginError(`อีเมล ${result.username} ไม่มีสิทธิ์เข้าใช้งานระบบ LWS (ไม่อยู่ใน Whitelist)`);
-          try {
-            await AuthService.logout();
-          } catch (err) {
-            console.warn('Logout after failed whitelist check failed:', err);
-          }
-          setIsLoggingIn(false);
-          return;
-        }
 
-        localStorage.setItem('lws_microsoft_account', result.username);
-        localStorage.setItem('lws_microsoft_token', result.token);
-        setMicrosoftToken(result.token);
-        setLoginError(null);
-
-        // Load drives/workspaces
-        const fetched = await AuthService.fetchOneDriveWorkspaces(settings.microsoftClientId, result.token);
-        setWorkspaces(fetched);
-        setIsWorkspaceSelectorOpen(true);
-      }
+      // loginRedirect navigates away — page will reload after Microsoft login.
+      // The result is handled by the processRedirect useEffect above.
+      await AuthService.login(settings.microsoftClientId);
+      // Code below this line is NOT reached (redirect navigates away)
     } catch (e: any) {
-      alert('เข้าสู่ระบบล้มเหลว: ' + (e?.message || e));
-    } finally {
+      // Only runs if loginRedirect itself throws (e.g. no clientId, config error)
+      setLoginError('เข้าสู่ระบบล้มเหลว: ' + (e?.message || String(e)));
       setIsLoggingIn(false);
     }
   };
