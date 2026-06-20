@@ -7,7 +7,6 @@ import {
   Plus,
   ArrowLeft,
   Trash2,
-  FileText,
   ExternalLink,
   LogOut
 } from 'lucide-react';
