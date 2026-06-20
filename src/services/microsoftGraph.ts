@@ -45,11 +45,11 @@ export class MicrosoftGraphService {
     try {
       // Trim workspacePath leading/trailing slashes
       const cleanWS = workspacePath.replace(/^\/|\/$/g, '');
-      const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/01_Office_Management`, {
+      const response = await graphFetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/01_Office_Management`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
-      });
+      }, clientId);
       if (response.status === 403) {
         return false;
       }
@@ -117,11 +117,11 @@ export class MicrosoftGraphService {
 
     try {
       const cleanWS = workspacePath.replace(/^\/|\/$/g, '');
-      const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/01_Office_Management/central_ledger.json:/content`, {
+      const response = await graphFetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/01_Office_Management/central_ledger.json:/content`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
-      });
+      }, clientId);
       if (response.status === 404) {
         return [];
       }
@@ -145,14 +145,14 @@ export class MicrosoftGraphService {
 
     try {
       const cleanWS = workspacePath.replace(/^\/|\/$/g, '');
-      const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/01_Office_Management/central_ledger.json:/content`, {
+      const response = await graphFetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/01_Office_Management/central_ledger.json:/content`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(ledger)
-      });
+      }, clientId);
       return response.ok;
     } catch (error) {
       console.error('[Graph API] saveCentralLedger error:', error);
@@ -178,14 +178,14 @@ export class MicrosoftGraphService {
 
     try {
       const cleanWS = workspacePath.replace(/^\/|\/$/g, '');
-      const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/${path}:/content`, {
+      const response = await graphFetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/${path}:/content`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': fileBlob.type
         },
         body: fileBlob
-      });
+      }, clientId);
       if (!response.ok) throw new Error('Upload slip failed');
       return { success: true, slipPath: path };
     } catch (error) {
@@ -216,15 +216,15 @@ export class MicrosoftGraphService {
       const newName = newPath.split('/').pop() || '';
 
       // Get item ID first
-      const getResponse = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${fullOldPath}`, {
+      const getResponse = await graphFetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${fullOldPath}`, {
         headers: { Authorization: `Bearer ${token}` }
-      });
+      }, clientId);
       if (!getResponse.ok) throw new Error(`Could not find old file at ${fullOldPath}`);
       const fileData = await getResponse.json();
       const itemId = fileData.id;
 
       // Rename item
-      const patchResponse = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${itemId}`, {
+      const patchResponse = await graphFetch(`https://graph.microsoft.com/v1.0/me/drive/items/${itemId}`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -233,7 +233,7 @@ export class MicrosoftGraphService {
         body: JSON.stringify({
           name: newName
         })
-      });
+      }, clientId);
       return patchResponse.ok;
     } catch (error) {
       console.error('[Graph API] renameFile error:', error);
@@ -261,14 +261,14 @@ export class MicrosoftGraphService {
     try {
       const cleanWS = workspacePath.replace(/^\/|\/$/g, '');
       const path = `${cleanWS}/${matterFolderName}/${subFolder}/${fileName}`;
-      const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${path}:/content`, {
+      const response = await graphFetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${path}:/content`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': fileBlob.type
         },
         body: fileBlob
-      });
+      }, clientId);
       return response.ok;
     } catch (error) {
       console.error('[Graph API] uploadDocument error:', error);
@@ -319,11 +319,11 @@ export class MicrosoftGraphService {
 
     try {
       const cleanWS = workspacePath.replace(/^\/|\/$/g, '');
-      const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/01_Office_Management/central_clients.json:/content`, {
+      const response = await graphFetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/01_Office_Management/central_clients.json:/content`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
-      });
+      }, clientId);
       if (response.status === 404) {
         return [];
       }
@@ -347,14 +347,14 @@ export class MicrosoftGraphService {
 
     try {
       const cleanWS = workspacePath.replace(/^\/|\/$/g, '');
-      const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/01_Office_Management/central_clients.json:/content`, {
+      const response = await graphFetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${cleanWS}/01_Office_Management/central_clients.json:/content`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(clients)
-      });
+      }, clientId);
       return response.ok;
     } catch (error) {
       console.error('[Graph API] saveCentralClients error:', error);
